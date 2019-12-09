@@ -1,6 +1,8 @@
 declare var monsters: any;
 var combatant_names: string[];
 
+function max_input_size() { return 40; }
+
 combatant_names = ["Hero", "Monster"];
 var combatant_selector = get_element("add_combatant");
 combatant_selector.appendChild(selection_menu(combatant_names));
@@ -14,13 +16,18 @@ function named_input(name: string, size: number, content: string = "") {
     return input;
 }
 
+function label(name: string, describing: HTMLElement) {
+    var ret = document.createElement("label");
+    ret.htmlFor = name;
+    ret.innerText = name;
+    ret.appendChild(describing);
+    return ret;
+}
+
 function labeled_input(name: string, size: number, content: string = "") {
-    let label = document.createElement("label");
-    let input = named_input(name, size, content);
-    label.htmlFor = name;
-    label.innerText = name;
-    label.appendChild(input);
-    return label;
+    var input = named_input(name, size, content);
+    var lbl = label(name, input);
+    return lbl;
 }
 
 function get_element(id: string) {
@@ -38,15 +45,27 @@ function selection_menu(values: string[]) {
     return selectList;
 }
 
-function named_textarea(name: string, rows: number) {
-    let span = document.createElement("span");
-    let textarea = document.createElement("textarea");
+
+function named_textarea(name: string, rows: number, content: string = "") {
+    var span = document.createElement("span");
     span.title = name;
+    var t_area = textarea(name, rows, content);
+    span.appendChild(t_area);
+    return span;
+}
+
+function labeled_textarea(name: string, rows: number, content: string = "") {
+    var t_area = textarea(name, rows, content);
+    return label(name, t_area);
+}
+
+function textarea(name: string, rows: number, content: string = "") {
+    var textarea = document.createElement("textarea");
     textarea.id = name;
     textarea.innerText = name;
     textarea.rows = rows;
-    span.appendChild(textarea);
-    return span;
+    textarea.value = content;
+    return textarea;
 }
 
 //https://stackoverflow.com/questions/3450593/how-do-i-clear-the-content-of-a-div-using-javascript
@@ -66,19 +85,28 @@ function get_monster(name: String) {
     return monsters.filter(e => e.Name == name)[0];
 }
 
+function display_key_and_value(key: string, value: string, display: HTMLElement) {
+    if (value.length < max_input_size())
+        display.appendChild(labeled_input(key, value.length, value));
+    else
+        display.appendChild(labeled_textarea(key, 5, value))
+}
+
+function display_object(obj: object, display: HTMLElement) {
+    var kys = Object.keys(obj);
+    kys.forEach(k => {
+        //field either contains an object or a string
+        var val = obj[k];
+        //console.log(k, val);
+        if (typeof (val) == "string") display_key_and_value(k, val, display);
+        else display_object(val, display);
+    })
+};
+
 function display_monster(ev: any) {
-    var display = get_element("combatant_description");
+    var display: HTMLElement = get_element("combatant_description");
     delete_children(display);
     //console.log(ev.target.value);
-
     var monster = get_monster(ev.target.value);
-    var kys = Object.keys(monster);
-    kys.forEach(k => {
-        //entweder das Feld enthält einen String oder ein Objekt
-        var val: string = monster[k];
-        var size = val.length;
-        console.log(k, val);
-        display.appendChild(labeled_input(k, size, val));
-    }
-    );
+    display_object(monster, display);
 }
