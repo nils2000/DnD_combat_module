@@ -68,6 +68,32 @@ function textarea(name: string, rows: number, content: string = "") {
     return textarea;
 }
 
+function table_row(list: any[]) {
+    var row = document.createElement("tr");
+    for (var k in list) {
+        var data = table_data(list[k]);
+        row.appendChild(data);
+    }
+    return row;
+}
+
+function table_data(item: any) {
+    var td = document.createElement("td");
+    td.appendChild(item);
+    return td;
+}
+
+function table(list:HTMLElement[]){
+    var ret = document.createElement("table");
+    list.forEach(e => ret.appendChild(e));
+    return ret;
+}
+
+function text(t:string){
+    var ret = document.createTextNode(t);
+    return ret;
+}
+
 //https://stackoverflow.com/questions/3450593/how-do-i-clear-the-content-of-a-div-using-javascript
 function delete_children(parent_element) {
     while (parent_element.firstChild) {
@@ -78,7 +104,7 @@ function delete_children(parent_element) {
 var monster_names: string[] = monsters.map(e => e.Name);
 var monster_selector = selection_menu(monster_names);
 combatant_selector.appendChild(monster_selector);
-monster_selector.addEventListener("change", display_monster);
+monster_selector.addEventListener("change", display_monster_as_table);
 
 
 function get_monster(name: String) {
@@ -109,4 +135,26 @@ function display_monster(ev: any) {
     //console.log(ev.target.value);
     var monster = get_monster(ev.target.value);
     display_object(monster, display);
+}
+
+function display_monster_as_table(ev: any){
+    var display: HTMLElement = get_element("combatant_description");
+    delete_children(display);
+    //console.log(ev.target.value);
+    var monster = get_monster(ev.target.value);
+    display.appendChild(tabulize_object(monster));
+}
+
+function rowalize_key_value(key:string,value:any){
+    if(typeof(value) == "string")
+        return table_row([text(key),text(value)]);
+    else
+        return table_row([text(key),tabulize_object(value)]);
+}
+
+function tabulize_object(o:object){
+    var kys = Object.keys(o);
+    var list = [];
+    kys.forEach(k => {list.push(rowalize_key_value(k,o[k]))});
+    return table(list);
 }
